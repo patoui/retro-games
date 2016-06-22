@@ -1,5 +1,5 @@
 <?php
-
+//This is a test comment, please ignore
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -12,3 +12,7 @@ class PartialController extends Controller
         return view('partial.' . $view);
     }
 }
+
+
+//test
+<?php >
