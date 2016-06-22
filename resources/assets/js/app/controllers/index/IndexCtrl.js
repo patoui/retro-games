@@ -1,6 +1,6 @@
 (function () {
 
-    var IndexController = function (
+    var IndexCtrl = function (
         $window,
         $state,
         $stateParams,
@@ -36,14 +36,14 @@
     angular
         .module('MainApp')
             .controller(
-                'IndexController', 
+                'IndexCtrl', 
                 [
                     '$window',
                     '$state',
                     '$stateParams',
                     '$timeout',
                     '$mdSidenav',
-                    IndexController
+                    IndexCtrl
                 ]
             );
 

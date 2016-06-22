@@ -3696,7 +3696,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
 }());
 (function () {
 
-    var IndexController = function (
+    var IndexCtrl = function (
         $window,
         $state,
         $stateParams,
@@ -3732,14 +3732,14 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
     angular
         .module('MainApp')
             .controller(
-                'IndexController', 
+                'IndexCtrl', 
                 [
                     '$window',
                     '$state',
                     '$stateParams',
                     '$timeout',
                     '$mdSidenav',
-                    IndexController
+                    IndexCtrl
                 ]
             );
 
