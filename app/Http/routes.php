@@ -11,6 +11,43 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+//Angular UI Router Views
+Route::group(
+    ['prefix' => 'v'],
+    function () {
+
+    Route::get(
+        '{random1?}/{random2?}/{random3?}/{random4?}/{random5?}/{random6?}',
+        [
+            'as' => 'angular',
+            'uses' =>'AngularController@view'
+        ]
+    );
+
 });
+
+//Partial Routes
+Route::get(
+    'p/{view}',
+    [
+        'as' => 'partial',
+        'uses' => 'PartialController@partial'
+    ]
+);
+
+Route::get(
+    'p/{sub}/{name}',
+    [
+        'as' => 'partials',
+        'uses' => 'PartialController@partials'
+    ]
+);
+
+//Angular Root
+Route::get(
+    '{random1?}/{random2?}/{random3?}/{random4?}/{random5?}/{random6?}',
+    [
+        'as' => 'angular',
+        'uses' =>'AngularController@angular'
+    ]
+);
