@@ -41,8 +41,10 @@ elixir(function(mix) {
             '../../../node_modules/angular-ui-router/release/angular-ui-router.min.js',
             'app/app.js',
             'app/routes/main/mainroutes.js',
+            'app/routes/games/pong/pongroutes.js',
             'app/controllers/main/MainCtrl.js',
             'app/controllers/index/IndexCtrl.js',
+            'app/controllers/games/pong/PongCtrl.js',
         ],
         'public/js/app.js'
     );

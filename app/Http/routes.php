@@ -11,7 +11,7 @@
 |
 */
 
-//Angular UI Router Views
+//ANGULAR UI ROUTE VIEWS
 Route::group(
     ['prefix' => 'v'],
     function () {
@@ -26,7 +26,16 @@ Route::group(
 
 });
 
-//Partial Routes
+//GAMES
+Route::get(
+    'g/pong',
+    [
+        'as' => 'pong',
+        'uses' => 'GameController@pong'
+    ]
+);
+
+//PARTIALS
 Route::get(
     'p/{view}',
     [
@@ -35,15 +44,7 @@ Route::get(
     ]
 );
 
-Route::get(
-    'p/{sub}/{name}',
-    [
-        'as' => 'partials',
-        'uses' => 'PartialController@partials'
-    ]
-);
-
-//Angular Root
+//ANGULAR ROOT
 Route::get(
     '{random1?}/{random2?}/{random3?}/{random4?}/{random5?}/{random6?}',
     [

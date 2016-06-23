@@ -16,14 +16,6 @@
                 controller: 'IndexCtrl',
                 controllerAs: 'indexCtrl'
             });
-
-        $stateProvider
-            .state('settings', {
-                url: '/s',
-                templateUrl: '/p/settings',
-                controller: 'AnotherController',
-                controllerAs: 'anotherController'
-            });
     };
 
     angular

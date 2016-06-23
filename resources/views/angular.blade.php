@@ -12,9 +12,9 @@
     </md-toolbar>
     <md-content flex>
         <md-list ng-cloak>
-            <md-list-item><a href="/s" ui-sref="settings">Settings</a></md-list-item>
-            <md-list-item>Second Item</md-list-item>
-            <md-list-item>Third Item</md-list-item>
+            <md-list-item><a href="/i" ui-sref="index">Home</a></md-list-item>
+            <md-list-item><a href="/pong" ui-sref="pong">Pong</a></md-list-item>
+            <md-list-item><a href="/tetris" ui-sref="tetris">Tetris</a></md-list-item>
         </md-list>
     </md-content>
 </md-sidenav>
@@ -32,6 +32,12 @@
                     <i class="material-icons">settings</i>
                 </md-button>
                 <md-menu-content width="4">
+                    <md-menu-item>
+                        <md-button ng-href="/login" ui-sref="login">
+                            <md-icon><i class="material-icons">input</i></md-icon>
+                            <span>Login</span>
+                        </md-button>
+                    </md-menu-item>
                     <md-menu-item>
                         <md-button ng-click="mainController.redial($event)">
                             <md-icon><i class="material-icons">notifications</i></md-icon>
