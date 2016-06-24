@@ -3644,6 +3644,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
         $mdSidenav
     ) {
         var self = this;
+        console.log($state);
         self.toggleLeft = buildDelayedToggler('left');
 
         self.openMenu = function($mdOpenMenu, ev) {
@@ -3757,6 +3758,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
 (function () {
 
     var PongCtrl = function (
+        $scope,
         $window,
         $state,
         $stateParams,
@@ -3766,35 +3768,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
         var self = this;
 
         self.init = function () {
-            var stage = new createjs.Stage("demoCanvas");
-            var paddleHeight = 60;
-            var paddleWidth = 15;
-            var canvasBorder = 10;
-
-            //Ball
-            var circle = new createjs.Shape();
-            circle.graphics.beginFill("white").drawCircle(0, 0, 10);
-            circle.x = 50;
-            circle.y = 50;
-            stage.addChild(circle);
-
-            //Player 1 Paddle
-            var paddle1 = new createjs.Shape();
-            paddle1.graphics.beginFill("white").drawRect(10, 10, paddleWidth, paddleHeight);
-            stage.addChild(paddle1);
-
-            //Player 2 Paddle
-            var paddle2 = new createjs.Shape();
-            paddle2.graphics.beginFill("white").drawRect(475, 50, paddleWidth, paddleHeight);
-            stage.addChild(paddle2);
-
-            //Player 2 Paddle
-            var paddle2 = new createjs.Shape();
-            paddle2.graphics.beginFill("white").drawRect(245, 10, 10, 280);
-            stage.addChild(paddle2);
-
-            //Update canvas
-            stage.update();
+            //
         };
     };
 
@@ -3803,6 +3777,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
             .controller(
                 'PongCtrl', 
                 [
+                    '$scope',
                     '$window',
                     '$state',
                     '$stateParams',
@@ -3813,4 +3788,248 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
             );
 
 }());
+(function () {
+
+    var app = angular.module('MainApp');
+
+    var gameCanvas = function () {
+        return {
+            restrict: 'EAC',
+            replace: true,
+            scope: false,
+            transclude: true,
+            template:
+            '<canvas id="newCanvas" width="{{ mainCtrl.width }}" height="{{ mainCtrl.height }}" style="background-color:black;">' +
+            '</canvas>',
+            link: function (scope, element, attrs) {
+                // console.log(stateProvider);
+                // if (scope.stage) {
+                //     scope.mainCtrl.stage.autoClear = true;
+                //     scope.mainCtrl.stage.removeAllChildren();
+                //     scope.mainCtrl.stage.update();
+                // } else {
+                //     scope.mainCtrl.stage = new createjs.Stage(element[0]);
+                // }
+                scope.mainCtrl.width = 500;
+                scope.mainCtrl.height = 300;
+                scope.mainCtrl.isLoaded = false;
+                // console.log(scope.mainCtrl.stage);
+                // scope.mainCtrl.stage = new createjs.Stage(element[0]);
+                // scope.pongCtrl.init(scope.mainCtrl.stage);
+            }
+        }
+    };
+
+    app.directive('gameCanvas', gameCanvas);
+
+}());
+
+(function () {
+
+    var app = angular.module('MainApp');
+
+    var pongCanvas = function ($window) {
+        return {
+            restrict: 'EAC',
+            replace: true,
+            transclude: true,
+            template:
+            '<canvas width="500" height="300" style="background-color:black;">' +
+            '</canvas>',
+            link: function (scope, element, attrs) {
+                //Global vars
+                var w,
+                    f,
+                    loader,
+                    canvasBorder,
+                    ball,
+                    ballXPosition,
+                    ballYPosition,
+                    paddleWidth,
+                    paddleHeight,
+                    paddle1,
+                    paddle1XPosition,
+                    paddle1YPosition,
+                    paddle2,
+                    paddle2XPosition,
+                    paddle2YPosition;
+
+                var movementDistance = 10;
+
+                var handlePaddle1Up = function () {
+                    paddle1.y = paddle1.y - movementDistance;
+                    scope.stage.update(event);
+                };
+
+                var handlePaddle1Down = function (event) {
+                    paddle1.y = paddle1.y + movementDistance;
+                    scope.stage.update(event);
+                };
+
+                var handlePaddle2Up = function () {
+                    paddle2.y = paddle2.y - movementDistance;
+                    scope.stage.update(event);
+                };
+
+                var handlePaddle2Down = function () {
+                    paddle2.y = paddle2.y + movementDistance;
+                    scope.stage.update(event);
+                };
+
+                // TODO MULTIPLE KEY PRESS
+                // var key = [];
+                // onkeydown = onkeyup = function(e) {
+                //     e = e || event; // to deal with IE
+                //     key[e.keyCode] = e.type == 'keydown';
+                //     console.log('in here');
+                //     if (testKeys('UP', 'DOWN')) {
+                //         console.log('UP and DOWN pressed');
+                //     }
+                // }
+
+                // var testKey = function (selkey) {
+                //     var alias = {
+                //         "W": 87,
+                //         "S": 83,
+                //         "UP": 38,
+                //         "DOWN": 40
+                //     };
+
+                //     return key[selkey] || key[alias[selkey]];
+                // };
+
+                // var testKeys = function () {
+                //     var i,
+                //     keylist = arguments,
+                //     status = true;
+
+                //     for (i = 0; i < keylist.length; i++) {
+                //         if (!testKey(keylist[i])) {
+                //             status = false;
+                //         }
+                //     }
+
+                //     return status;
+                // };
+
+                var keydown = function (event) {
+                    if (event.keyCode === 87) {//if keyCode is "W" (up)
+                        handlePaddle1Up();
+                    }
+                    if (event.keyCode === 83) {//if keyCode is "S" (down)
+                        handlePaddle1Down();
+                    }
+                    if (event.keyCode === 38) {//if keyCode is "Up"
+                        handlePaddle2Up();
+                    }
+                    if (event.keyCode === 40) {//if keyCode is "Down"
+                        handlePaddle2Down();
+                    }
+                };
+
+                var handleComplete = function () {
+                    window.onkeydown = keydown;
+                };
+
+                var drawGame = function () {
+                    // TODO Need something to determine aspect ratio
+                    if (scope.stage) {
+                        scope.stage.autoClear = true;
+                        scope.stage.removeAllChildren();
+                        scope.stage.update();
+                    } else {
+                        scope.stage = new createjs.Stage(element[0]);
+                        // TODO Fix this non-sense...
+                        // 32 for padding both sides
+                        // 72 for nav bar height
+                        // Should be size of parent container
+                        scope.stage.canvas.width = $window.innerWidth - 32;
+                        scope.stage.canvas.height = $window.innerHeight - 32 - 72;
+                        w = scope.stage.canvas.width;
+                        h = scope.stage.canvas.height;
+                        //Load assets here
+                        loader = new createjs.LoadQueue(false);
+                        handleComplete();
+                        // loader.addEventListener("complete", handleComplete);
+                        // loaderSvc.getLoader().addEventListener("complete", handleComplete);
+                        // loaderSvc.loadAssets();
+                    }
+
+                    //Game Vars
+                    canvasBorder = 10;
+
+                    //Ball
+                    ballXPosition = 50;
+                    ballYPosition = 50;
+                    ball = new createjs.Shape();
+                    ball.graphics.beginFill("white").drawCircle(0, 0, 10);
+                    ball.x = ballXPosition;
+                    ball.y = ballYPosition;
+                    scope.stage.addChild(ball);
+
+                    //Paddle Vars
+                    paddleHeight = 60;
+                    paddleWidth = 15;
+
+                    //Paddle 1 Paddle
+                    paddle1XPosition = canvasBorder;
+                    paddle1YPosition = canvasBorder;
+                    paddle1 = new createjs.Shape();
+                    paddle1.graphics.beginFill("white")
+                        .drawRect(
+                            paddle1XPosition,
+                            paddle1YPosition,
+                            paddleWidth,
+                            paddleHeight
+                        );
+                    scope.stage.addChild(paddle1);
+
+                    //Paddle 2 Paddle
+                    paddle2XPosition = w - canvasBorder - paddleWidth;
+                    paddle2YPosition = canvasBorder;
+                    paddle2 = new createjs.Shape();
+                    paddle2.graphics.beginFill("white")
+                        .drawRect(
+                            paddle2XPosition,
+                            paddle2YPosition,
+                            paddleWidth,
+                            paddleHeight
+                        );
+                    scope.stage.addChild(paddle2);
+
+                    //Center Line
+                    centerLineXPosition = w / 2 + canvasBorder / 2;
+                    centerLineYPosition = canvasBorder;
+                    centerLineHeight = h - canvasBorder * 2;
+                    centerLine = new createjs.Shape();
+                    centerLine.graphics.beginFill("white")
+                        .drawRect(
+                            centerLineXPosition,
+                            centerLineYPosition,
+                            10,
+                            centerLineHeight
+                        );
+                    scope.stage.addChild(centerLine);
+
+                    //Update canvas
+                    scope.stage.update();
+                };
+                drawGame();
+
+                //Resize canvas
+                angular.element($window).bind(
+                    'resize',
+                    function () {
+                        drawGame();
+                        scope.$digest();
+                    }
+                );
+            }
+        }
+    };
+
+    app.directive('pongCanvas', ['$window', pongCanvas]);
+
+}());
+
 //# sourceMappingURL=app.js.map

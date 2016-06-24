@@ -8,6 +8,7 @@
         $mdSidenav
     ) {
         var self = this;
+        console.log($state);
         self.toggleLeft = buildDelayedToggler('left');
 
         self.openMenu = function($mdOpenMenu, ev) {

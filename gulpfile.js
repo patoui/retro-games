@@ -45,6 +45,8 @@ elixir(function(mix) {
             'app/controllers/main/MainCtrl.js',
             'app/controllers/index/IndexCtrl.js',
             'app/controllers/games/pong/PongCtrl.js',
+            'app/directives/games/gameCanvas.js',
+            'app/directives/games/pong/pongCanvas.js',
         ],
         'public/js/app.js'
     );
