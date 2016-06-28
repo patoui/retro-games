@@ -3837,7 +3837,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
             '<canvas width="500" height="300" style="background-color:black;">' +
             '</canvas>',
             link: function (scope, element, attrs) {
-                //Global vars
+                // Global vars
                 var w,
                     f,
                     loader,
@@ -3862,8 +3862,8 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                 };
 
                 var handlePaddle1Down = function (event) {
-                    paddle1.y = paddle1.y + movementDistance;
-                    scope.stage.update(event);
+                    paddle1.y = paddle1.y + movementDistance
+;                    scope.stage.update(event);
                 };
 
                 var handlePaddle2Up = function () {
@@ -3876,59 +3876,44 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                     scope.stage.update(event);
                 };
 
-                // TODO MULTIPLE KEY PRESS
-                // var key = [];
-                // onkeydown = onkeyup = function(e) {
-                //     e = e || event; // to deal with IE
-                //     key[e.keyCode] = e.type == 'keydown';
-                //     console.log('in here');
-                //     if (testKeys('UP', 'DOWN')) {
-                //         console.log('UP and DOWN pressed');
-                //     }
-                // }
-
-                // var testKey = function (selkey) {
-                //     var alias = {
-                //         "W": 87,
-                //         "S": 83,
-                //         "UP": 38,
-                //         "DOWN": 40
-                //     };
-
-                //     return key[selkey] || key[alias[selkey]];
-                // };
-
-                // var testKeys = function () {
-                //     var i,
-                //     keylist = arguments,
-                //     status = true;
-
-                //     for (i = 0; i < keylist.length; i++) {
-                //         if (!testKey(keylist[i])) {
-                //             status = false;
-                //         }
-                //     }
-
-                //     return status;
-                // };
-
-                var keydown = function (event) {
-                    if (event.keyCode === 87) {//if keyCode is "W" (up)
+                // CONTROLS
+                var key = [];
+                var controls = function(e) {
+                    e = e || event; // to deal with IE
+                    key[e.keyCode] = e.type == 'keydown';
+                    if (key[87] && key[38]) {
+                        // W/Up same time
                         handlePaddle1Up();
-                    }
-                    if (event.keyCode === 83) {//if keyCode is "S" (down)
-                        handlePaddle1Down();
-                    }
-                    if (event.keyCode === 38) {//if keyCode is "Up"
                         handlePaddle2Up();
-                    }
-                    if (event.keyCode === 40) {//if keyCode is "Down"
+                    } else if (key[87] && key[40]) {
+                        // W/Down same time
+                        handlePaddle1Up();
+                        handlePaddle2Down();
+                    } else if (key[83] && key[38]) {
+                        // S/Up same time
+                        handlePaddle1Down();
+                        handlePaddle2Up();
+                    } else if (key[83] && key[40]) {
+                        // S/Down same time
+                        handlePaddle1Down();
+                        handlePaddle2Down();
+                    } else if (key[87]) {
+                        // W
+                        handlePaddle1Up();
+                    } else if (key[38]) {
+                        // Up
+                        handlePaddle2Up();
+                    } else if (key[83]) {
+                        // S
+                        handlePaddle1Down();
+                    } else if (key[40]) {
+                        // Down
                         handlePaddle2Down();
                     }
                 };
 
                 var handleComplete = function () {
-                    window.onkeydown = keydown;
+                    window.onkeydown = window.onkeyup = controls;
                 };
 
                 var drawGame = function () {
