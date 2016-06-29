@@ -3644,7 +3644,6 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
         $mdSidenav
     ) {
         var self = this;
-        console.log($state);
         self.toggleLeft = buildDelayedToggler('left');
 
         self.openMenu = function($mdOpenMenu, ev) {
@@ -3838,42 +3837,100 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
             '</canvas>',
             link: function (scope, element, attrs) {
                 // Global vars
-                var w,
-                    f,
+                var canvasBorder,
+                    canvasWidth,
+                    canvasHeight,
+                    canvasLeftBound,
+                    canvasRightBound,
+                    canvasUpperBound,
+                    canvasLowerBound,
                     loader,
-                    canvasBorder,
                     ball,
-                    ballXPosition,
-                    ballYPosition,
+                    ballXDirection,
+                    ballYDirection,
                     paddleWidth,
                     paddleHeight,
                     paddle1,
-                    paddle1XPosition,
-                    paddle1YPosition,
-                    paddle2,
-                    paddle2XPosition,
-                    paddle2YPosition;
+                    paddle2;
 
+                ballXDirection = 1;
+                ballYDirection = 1;
+
+                var activeListeners = [];
                 var movementDistance = 10;
 
-                var handlePaddle1Up = function () {
-                    paddle1.y = paddle1.y - movementDistance;
+                var ballMovement = function (event) {
+                    var deltaS = event.delta / 1000;
+                    // LETS MAKE IT BOUNCE OFF THE BOTTOM??!?!? :D
+                    if (ball.y + deltaS * movementDistance * ballYDirection >= canvasLowerBound) {
+                        ballYDirection = -1;
+                    }
+                    if (ball.y + deltaS * movementDistance * ballYDirection <= canvasUpperBound) {
+                        ballYDirection = 1;
+                    }
+                    if (ball.x + deltaS * movementDistance * ballXDirection >= canvasRightBound) {
+                        ballXDirection = -1;
+                    }
+                    if (ball.x + deltaS * movementDistance * ballXDirection <= canvasLeftBound) {
+                        ballXDirection = 1;
+                    }
+                    ball.x = ball.x + deltaS * 100 * ballXDirection;
+                    ball.y = ball.y + deltaS * 100 * ballYDirection;
                     scope.stage.update(event);
                 };
+                createjs.Ticker.addEventListener("tick", ballMovement);
 
-                var handlePaddle1Down = function (event) {
-                    paddle1.y = paddle1.y + movementDistance
-;                    scope.stage.update(event);
+                var handlePaddle1Up = function () {
+                    if (paddle1.y - movementDistance >= 0) {
+                        paddle1.y = paddle1.y - movementDistance;
+                        scope.stage.update(event);
+                    }
+                };
+
+                var handlePaddle1Down = function () {
+                    if (paddle1.y + movementDistance + paddleHeight + canvasBorder <= canvasLowerBound) {
+                        paddle1.y = paddle1.y + movementDistance;
+                        scope.stage.update(event);
+                    }
                 };
 
                 var handlePaddle2Up = function () {
-                    paddle2.y = paddle2.y - movementDistance;
-                    scope.stage.update(event);
+                    if (paddle2.y - movementDistance >= 0) {
+                        paddle2.y = paddle2.y - movementDistance;
+                        scope.stage.update(event);
+                    }
                 };
 
                 var handlePaddle2Down = function () {
-                    paddle2.y = paddle2.y + movementDistance;
-                    scope.stage.update(event);
+                    if (paddle2.y + movementDistance + paddleHeight + canvasBorder <= canvasLowerBound) {
+                        paddle2.y = paddle2.y + movementDistance;
+                        scope.stage.update(event);
+                    }
+                };
+
+                var updateTickListeners = function (toAddListeners) {
+                    for (var index in activeListeners) {
+                        createjs.Ticker.removeEventListener("tick", activeListeners[index]);
+                    }
+                    activeListeners = [];
+                    for (var index in toAddListeners) {
+                        activeListeners.push(toAddListeners[index]);
+                        createjs.Ticker.addEventListener("tick", toAddListeners[index]);
+                    }
+                };
+
+                var removeTickListeners = function (toRemoveListeners) {
+                    for (var index in toRemoveListeners) {
+                        createjs.Ticker.removeEventListener("tick", toRemoveListeners[index]);
+                        delete activeListeners[activeListeners.indexOf(toRemoveListeners[index])];
+                    }
+                };
+
+                var removeAllTickListeners = function (e) {
+                    for (var index in activeListeners) {
+                        createjs.Ticker.removeEventListener("tick", activeListeners[index]);
+                    }
+                    activeListeners = [];
                 };
 
                 // CONTROLS
@@ -3883,37 +3940,49 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                     key[e.keyCode] = e.type == 'keydown';
                     if (key[87] && key[38]) {
                         // W/Up same time
-                        handlePaddle1Up();
-                        handlePaddle2Up();
+                        updateTickListeners([handlePaddle1Up, handlePaddle2Up]);
                     } else if (key[87] && key[40]) {
                         // W/Down same time
-                        handlePaddle1Up();
-                        handlePaddle2Down();
+                        updateTickListeners([handlePaddle1Up, handlePaddle2Down]);
                     } else if (key[83] && key[38]) {
                         // S/Up same time
-                        handlePaddle1Down();
-                        handlePaddle2Up();
+                        updateTickListeners([handlePaddle1Down, handlePaddle2Up]);
                     } else if (key[83] && key[40]) {
                         // S/Down same time
-                        handlePaddle1Down();
-                        handlePaddle2Down();
+                        updateTickListeners([handlePaddle1Down, handlePaddle2Down]);
                     } else if (key[87]) {
                         // W
-                        handlePaddle1Up();
+                        updateTickListeners([handlePaddle1Up]);
                     } else if (key[38]) {
                         // Up
-                        handlePaddle2Up();
+                        updateTickListeners([handlePaddle2Up]);
                     } else if (key[83]) {
                         // S
-                        handlePaddle1Down();
+                        updateTickListeners([handlePaddle1Down]);
                     } else if (key[40]) {
                         // Down
-                        handlePaddle2Down();
+                        updateTickListeners([handlePaddle2Down]);
+                    }
+                    if (e.type == 'keyup') {
+                        if (e.keyCode == 87) {
+                            // W
+                            removeTickListeners([handlePaddle1Up]);
+                        } else if (e.keyCode == 38) {
+                            // Up
+                            removeTickListeners([handlePaddle2Up]);
+                        } else if (e.keyCode == 83) {
+                            // S
+                            removeTickListeners([handlePaddle1Down]);
+                        } else if (e.keyCode == 40) {
+                            // Down
+                            removeTickListeners([handlePaddle2Down]);
+                        }
                     }
                 };
 
                 var handleComplete = function () {
                     window.onkeydown = window.onkeyup = controls;
+                    window.onblur = removeAllTickListeners;
                 };
 
                 var drawGame = function () {
@@ -3928,28 +3997,27 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                         // 32 for padding both sides
                         // 72 for nav bar height
                         // Should be size of parent container
-                        scope.stage.canvas.width = $window.innerWidth - 32;
-                        scope.stage.canvas.height = $window.innerHeight - 32 - 72;
-                        w = scope.stage.canvas.width;
-                        h = scope.stage.canvas.height;
+                        canvasWidth = Math.floor(($window.innerWidth - 32) / 10) * 10;
+                        canvasHeight = Math.floor(($window.innerHeight - 32 - 72) / 10) * 10;
+                        scope.stage.canvas.width = canvasWidth;
+                        scope.stage.canvas.height = canvasHeight;
                         //Load assets here
                         loader = new createjs.LoadQueue(false);
                         handleComplete();
-                        // loader.addEventListener("complete", handleComplete);
-                        // loaderSvc.getLoader().addEventListener("complete", handleComplete);
-                        // loaderSvc.loadAssets();
                     }
 
-                    //Game Vars
+                    //Canvas Vars
                     canvasBorder = 10;
+                    canvasLeftBound = canvasBorder;
+                    canvasRightBound = canvasWidth - canvasBorder;
+                    canvasUpperBound = canvasBorder;
+                    canvasLowerBound = canvasHeight - canvasBorder;
 
                     //Ball
-                    ballXPosition = 50;
-                    ballYPosition = 50;
                     ball = new createjs.Shape();
                     ball.graphics.beginFill("white").drawCircle(0, 0, 10);
-                    ball.x = ballXPosition;
-                    ball.y = ballYPosition;
+                    ball.x = 50;
+                    ball.y = 50;
                     scope.stage.addChild(ball);
 
                     //Paddle Vars
@@ -3957,42 +4025,35 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                     paddleWidth = 15;
 
                     //Paddle 1 Paddle
-                    paddle1XPosition = canvasBorder;
-                    paddle1YPosition = canvasBorder;
                     paddle1 = new createjs.Shape();
                     paddle1.graphics.beginFill("white")
                         .drawRect(
-                            paddle1XPosition,
-                            paddle1YPosition,
+                            canvasBorder,
+                            canvasBorder,
                             paddleWidth,
                             paddleHeight
                         );
                     scope.stage.addChild(paddle1);
 
                     //Paddle 2 Paddle
-                    paddle2XPosition = w - canvasBorder - paddleWidth;
-                    paddle2YPosition = canvasBorder;
                     paddle2 = new createjs.Shape();
                     paddle2.graphics.beginFill("white")
                         .drawRect(
-                            paddle2XPosition,
-                            paddle2YPosition,
+                            canvasWidth - canvasBorder - paddleWidth,
+                            canvasBorder,
                             paddleWidth,
                             paddleHeight
                         );
                     scope.stage.addChild(paddle2);
 
                     //Center Line
-                    centerLineXPosition = w / 2 + canvasBorder / 2;
-                    centerLineYPosition = canvasBorder;
-                    centerLineHeight = h - canvasBorder * 2;
                     centerLine = new createjs.Shape();
                     centerLine.graphics.beginFill("white")
                         .drawRect(
-                            centerLineXPosition,
-                            centerLineYPosition,
+                            canvasWidth / 2 + canvasBorder / 2,
+                            canvasBorder,
                             10,
-                            centerLineHeight
+                            canvasHeight - canvasBorder * 2
                         );
                     scope.stage.addChild(centerLine);
 

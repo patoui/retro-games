@@ -56,7 +56,7 @@
         </div>
     </md-toolbar>
     <md-content layout-fill>
-        <section flex-offset-gt-md="15" flex="100" flex-gt-md="70" layout="column" layout-padding ui-view></section>
+        <section flex-offset-gt-md="15" flex="100" flex-gt-md="70" layout="column" layout-margin ui-view></section>
     </md-content>
 </md-content>
 @include('layout.footer')
