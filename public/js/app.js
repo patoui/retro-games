@@ -3846,6 +3846,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                     canvasLowerBound,
                     loader,
                     ball,
+                    ballRadius,
                     ballXDirection,
                     ballYDirection,
                     paddleWidth,
@@ -3853,26 +3854,155 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                     paddle1,
                     paddle2;
 
-                ballXDirection = 1;
-                ballYDirection = 1;
+                ballXDirection = -1;
+                ballYDirection = -1;
 
                 var activeListeners = [];
                 var movementDistance = 10;
+                var paddleDeltaDenominator = 100;
+                var deltaDenominator = 1000;
+
+                var drawGame = function () {
+                    // TODO Need something to determine aspect ratio
+                    if (scope.stage) {
+                        scope.stage.autoClear = true;
+                        scope.stage.removeAllChildren();
+                        scope.stage.update();
+                    } else {
+                        scope.stage = new createjs.Stage(element[0]);
+                        // TODO Fix this non-sense...
+                        // 32 for padding both sides
+                        // 72 for nav bar height
+                        // Should be size of parent container
+                        canvasWidth = Math.floor(($window.innerWidth - 32) / 10) * 10;
+                        canvasHeight = Math.floor(($window.innerHeight - 32 - 72) / 10) * 10;
+                        scope.stage.canvas.width = canvasWidth;
+                        scope.stage.canvas.height = canvasHeight;
+                        //Load assets here
+                        loader = new createjs.LoadQueue(false);
+                    }
+
+                    //Canvas Vars
+                    canvasBorder = 10;
+                    canvasLeftBound = canvasBorder;
+                    canvasRightBound = canvasWidth - canvasBorder;
+                    canvasUpperBound = canvasBorder;
+                    canvasLowerBound = canvasHeight - canvasBorder;
+
+                    //Ball
+                    ballRadius = 10;
+                    ball = new createjs.Shape();
+                    ball.graphics.beginFill("white").drawCircle(0, 0, ballRadius);
+                    ball.x = 50;
+                    ball.y = 50;
+                    scope.stage.addChild(ball);
+
+                    //Paddle Vars
+                    paddleHeight = 60;
+                    paddleWidth = 15;
+
+                    //Paddle 1 Paddle
+                    paddle1 = new createjs.Shape();
+                    paddle1.x = canvasBorder;
+                    paddle1.y = canvasBorder;
+                    paddle1.graphics.beginFill("white")
+                        .drawRect(
+                            0,
+                            0,
+                            paddleWidth,
+                            paddleHeight
+                        );
+                    scope.stage.addChild(paddle1);
+
+                    //Paddle 2 Paddle
+                    paddle2 = new createjs.Shape();
+                    paddle2.x = canvasWidth - canvasBorder - paddleWidth;
+                    paddle2.y = canvasBorder;
+                    paddle2.graphics.beginFill("white")
+                        .drawRect(
+                            0,
+                            0,
+                            paddleWidth,
+                            paddleHeight
+                        );
+                    scope.stage.addChild(paddle2);
+
+                    //Center Line
+                    centerLine = new createjs.Shape();
+                    centerLine.graphics.beginFill("white")
+                        .drawRect(
+                            canvasWidth / 2 + canvasBorder / 2,
+                            canvasBorder,
+                            10,
+                            canvasHeight - canvasBorder * 2
+                        );
+                    scope.stage.addChild(centerLine);
+
+                    //Update canvas
+                    scope.stage.update();
+                }();
+
+                var getPaddle1Boundaries = function () {
+                    var paddleX1 = paddle1.x + paddleWidth;
+                    var paddleY1 = paddle1.y;
+                    var paddleX2 = paddleX1;
+                    var paddleY2 = paddle1.y + paddleHeight;
+                    return {
+                        x1: paddleX1,
+                        y1: paddleY1,
+                        x2: paddleX2,
+                        y2: paddleY2
+                    }
+                };
+
+                var getPaddle2Boundaries = function () {
+                    var paddleX1 = paddle2.x;
+                    var paddleY1 = paddle2.y;
+                    var paddleX2 = paddleX1;
+                    var paddleY2 = paddle2.y + paddleHeight;
+                    return {
+                        x1: paddleX1,
+                        y1: paddleY1,
+                        x2: paddleX2,
+                        y2: paddleY2
+                    }
+                };
 
                 var ballMovement = function (event) {
-                    var deltaS = event.delta / 1000;
-                    // LETS MAKE IT BOUNCE OFF THE BOTTOM??!?!? :D
-                    if (ball.y + deltaS * movementDistance * ballYDirection >= canvasLowerBound) {
-                        ballYDirection = -1;
-                    }
-                    if (ball.y + deltaS * movementDistance * ballYDirection <= canvasUpperBound) {
-                        ballYDirection = 1;
-                    }
-                    if (ball.x + deltaS * movementDistance * ballXDirection >= canvasRightBound) {
-                        ballXDirection = -1;
-                    }
-                    if (ball.x + deltaS * movementDistance * ballXDirection <= canvasLeftBound) {
-                        ballXDirection = 1;
+                    var deltaS = event.delta / deltaDenominator;
+                    var paddle1Boundaries = getPaddle1Boundaries();
+                    var paddle2Boundaries = getPaddle2Boundaries();
+                    if ((Math.ceil(ball.x - ballRadius) <= paddle1Boundaries.x1
+                        && ball.y >= paddle1Boundaries.y1
+                        && ball.y <= paddle1Boundaries.y2)
+                        ||
+                        (Math.ceil(ball.x + ballRadius) >= paddle2Boundaries.x1
+                        && ball.y >= paddle2Boundaries.y1
+                        && ball.y <= paddle2Boundaries.y2)) {
+                        ballXDirection *= -1;
+                    } else {
+                        if (ball.y + deltaS * movementDistance * ballYDirection >= canvasLowerBound) {
+                            ballYDirection = -1;
+                        }
+                        if (ball.y + deltaS * movementDistance * ballYDirection <= canvasUpperBound) {
+                            ballYDirection = 1;
+                        }
+                        if (ball.x + deltaS * movementDistance * ballXDirection >= canvasRightBound) {
+                            ballXDirection = -1;
+                        }
+                        if (ball.x + deltaS * movementDistance * ballXDirection <= canvasLeftBound) {
+                            ballXDirection = 1;
+                        }                        
+                        if (Math.ceil(ball.x - ballRadius) < (canvasBorder + paddleWidth)) {
+                            console.log('Paddle 2 Scored!');
+                            createjs.Ticker.removeEventListener("tick", ballMovement);
+                            window.onkeydown = window.onkeyup = undefined;
+                        }
+                        if (Math.ceil(ball.x + ballRadius) > (canvasWidth - canvasBorder - paddleWidth)) {
+                            console.log('Paddle 1 Scored!');
+                            createjs.Ticker.removeEventListener("tick", ballMovement);
+                            window.onkeydown = window.onkeyup = undefined;
+                        }
                     }
                     ball.x = ball.x + deltaS * 100 * ballXDirection;
                     ball.y = ball.y + deltaS * 100 * ballYDirection;
@@ -3880,29 +4010,31 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                 };
                 createjs.Ticker.addEventListener("tick", ballMovement);
 
-                var handlePaddle1Up = function () {
-                    if (paddle1.y - movementDistance >= 0) {
-                        paddle1.y = paddle1.y - movementDistance;
+                var handlePaddle1Up = function (event) {
+                    // Rethink this, make tick occur 10 times for 1px per? Smoother?
+                    // var deltaS = event.delta / paddleDeltaDenominator;
+                    if (paddle1.y - movementDistance >= canvasUpperBound) {
+                        paddle1.y = paddle1.y - movementDistance; // * deltaS
                         scope.stage.update(event);
                     }
                 };
 
-                var handlePaddle1Down = function () {
-                    if (paddle1.y + movementDistance + paddleHeight + canvasBorder <= canvasLowerBound) {
+                var handlePaddle1Down = function (event) {
+                    if (paddle1.y + movementDistance + paddleHeight <= canvasLowerBound) {
                         paddle1.y = paddle1.y + movementDistance;
                         scope.stage.update(event);
                     }
                 };
 
-                var handlePaddle2Up = function () {
-                    if (paddle2.y - movementDistance >= 0) {
+                var handlePaddle2Up = function (event) {
+                    if (paddle2.y - movementDistance >= canvasUpperBound) {
                         paddle2.y = paddle2.y - movementDistance;
                         scope.stage.update(event);
                     }
                 };
 
-                var handlePaddle2Down = function () {
-                    if (paddle2.y + movementDistance + paddleHeight + canvasBorder <= canvasLowerBound) {
+                var handlePaddle2Down = function (event) {
+                    if (paddle2.y + movementDistance + paddleHeight <= canvasLowerBound) {
                         paddle2.y = paddle2.y + movementDistance;
                         scope.stage.update(event);
                     }
@@ -3983,84 +4115,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                 var handleComplete = function () {
                     window.onkeydown = window.onkeyup = controls;
                     window.onblur = removeAllTickListeners;
-                };
-
-                var drawGame = function () {
-                    // TODO Need something to determine aspect ratio
-                    if (scope.stage) {
-                        scope.stage.autoClear = true;
-                        scope.stage.removeAllChildren();
-                        scope.stage.update();
-                    } else {
-                        scope.stage = new createjs.Stage(element[0]);
-                        // TODO Fix this non-sense...
-                        // 32 for padding both sides
-                        // 72 for nav bar height
-                        // Should be size of parent container
-                        canvasWidth = Math.floor(($window.innerWidth - 32) / 10) * 10;
-                        canvasHeight = Math.floor(($window.innerHeight - 32 - 72) / 10) * 10;
-                        scope.stage.canvas.width = canvasWidth;
-                        scope.stage.canvas.height = canvasHeight;
-                        //Load assets here
-                        loader = new createjs.LoadQueue(false);
-                        handleComplete();
-                    }
-
-                    //Canvas Vars
-                    canvasBorder = 10;
-                    canvasLeftBound = canvasBorder;
-                    canvasRightBound = canvasWidth - canvasBorder;
-                    canvasUpperBound = canvasBorder;
-                    canvasLowerBound = canvasHeight - canvasBorder;
-
-                    //Ball
-                    ball = new createjs.Shape();
-                    ball.graphics.beginFill("white").drawCircle(0, 0, 10);
-                    ball.x = 50;
-                    ball.y = 50;
-                    scope.stage.addChild(ball);
-
-                    //Paddle Vars
-                    paddleHeight = 60;
-                    paddleWidth = 15;
-
-                    //Paddle 1 Paddle
-                    paddle1 = new createjs.Shape();
-                    paddle1.graphics.beginFill("white")
-                        .drawRect(
-                            canvasBorder,
-                            canvasBorder,
-                            paddleWidth,
-                            paddleHeight
-                        );
-                    scope.stage.addChild(paddle1);
-
-                    //Paddle 2 Paddle
-                    paddle2 = new createjs.Shape();
-                    paddle2.graphics.beginFill("white")
-                        .drawRect(
-                            canvasWidth - canvasBorder - paddleWidth,
-                            canvasBorder,
-                            paddleWidth,
-                            paddleHeight
-                        );
-                    scope.stage.addChild(paddle2);
-
-                    //Center Line
-                    centerLine = new createjs.Shape();
-                    centerLine.graphics.beginFill("white")
-                        .drawRect(
-                            canvasWidth / 2 + canvasBorder / 2,
-                            canvasBorder,
-                            10,
-                            canvasHeight - canvasBorder * 2
-                        );
-                    scope.stage.addChild(centerLine);
-
-                    //Update canvas
-                    scope.stage.update();
-                };
-                drawGame();
+                }();
 
                 //Resize canvas
                 angular.element($window).bind(
