@@ -3765,6 +3765,8 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
         $mdSidenav
     ) {
         var self = this;
+        self.paddle1Score = 0;
+        self.paddle2Score = 0;
 
         self.init = function () {
             //
@@ -3833,11 +3835,18 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
             replace: true,
             transclude: true,
             template:
-            '<canvas width="500" height="300" style="background-color:black;">' +
-            '</canvas>',
+            '<md-content>' +
+                '<div layout="row">' +
+                    '<div flex="50" layout="row" layout-align="center center"><h1 ng-bind="pongCtrl.paddle1Score"></h1></div>' +
+                    '<div flex="50" layout="row" layout-align="center center"><h1 ng-bind="pongCtrl.paddle2Score"></h1></div>' +
+                '</div>' +
+                '<canvas width="500" height="300" style="background-color:black;">' +
+                '</canvas>' +
+            '<md-content>',
             link: function (scope, element, attrs) {
                 // Global vars
-                var canvasBorder,
+                var canvasElement,
+                    canvasBorder,
                     canvasWidth,
                     canvasHeight,
                     canvasLeftBound,
@@ -3854,6 +3863,8 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                     paddle1,
                     paddle2;
 
+                canvasElement = element[0].children[1];
+
                 ballXDirection = -1;
                 ballYDirection = -1;
 
@@ -3869,13 +3880,13 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                         scope.stage.removeAllChildren();
                         scope.stage.update();
                     } else {
-                        scope.stage = new createjs.Stage(element[0]);
+                        scope.stage = new createjs.Stage(canvasElement);
                         // TODO Fix this non-sense...
                         // 32 for padding both sides
                         // 72 for nav bar height
                         // Should be size of parent container
                         canvasWidth = Math.floor(($window.innerWidth - 32) / 10) * 10;
-                        canvasHeight = Math.floor(($window.innerHeight - 32 - 72) / 10) * 10;
+                        canvasHeight = Math.floor(($window.innerHeight - 32 - 72) / 10) * 10 - 68;
                         scope.stage.canvas.width = canvasWidth;
                         scope.stage.canvas.height = canvasHeight;
                         //Load assets here
@@ -3994,12 +4005,32 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
                             ballXDirection = 1;
                         }                        
                         if (Math.ceil(ball.x - ballRadius) < (canvasBorder + paddleWidth)) {
-                            console.log('Paddle 2 Scored!');
+                            // Update score
+                            scope.pongCtrl.paddle2Score += 1;
+                            scope.$digest();
+
+                            // Display score text
+                            var text = new createjs.Text("Paddle 2 Scored!", "bold 48px Arial", "white");
+                            text.x = canvasWidth / 2 - text.getBounds().width / 2;
+                            scope.stage.addChild(text);
+                            scope.stage.update();
+
+                            // Disable paddle movements
                             createjs.Ticker.removeEventListener("tick", ballMovement);
                             window.onkeydown = window.onkeyup = undefined;
                         }
                         if (Math.ceil(ball.x + ballRadius) > (canvasWidth - canvasBorder - paddleWidth)) {
-                            console.log('Paddle 1 Scored!');
+                            // Update score
+                            scope.pongCtrl.paddle1Score += 1;
+                            scope.$digest();
+
+                            // Display score text
+                            var text = new createjs.Text("Paddle 1 Scored!", "bold 48px Arial", "white");
+                            text.x = canvasWidth / 2 - text.getBounds().width / 2;
+                            scope.stage.addChild(text);
+                            scope.stage.update();
+
+                            // Disable paddle movements
                             createjs.Ticker.removeEventListener("tick", ballMovement);
                             window.onkeydown = window.onkeyup = undefined;
                         }

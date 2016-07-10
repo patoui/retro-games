@@ -9,6 +9,8 @@
         $mdSidenav
     ) {
         var self = this;
+        self.paddle1Score = 0;
+        self.paddle2Score = 0;
 
         self.init = function () {
             //
